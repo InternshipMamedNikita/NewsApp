@@ -1,12 +1,16 @@
 package com.example.rssapp
 
+import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.ImageView
 import android.widget.TextView
+import com.squareup.picasso.Picasso
 import io.reactivex.android.schedulers.AndroidSchedulers
 import org.simpleframework.xml.Element
 import org.simpleframework.xml.ElementList
 import org.simpleframework.xml.Root
+import org.simpleframework.xml.Text
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -18,33 +22,23 @@ import retrofit2.http.Path
 import rx.Observable
 import rx.Scheduler
 import rx.Single
+import rx.functions.Action1
 import rx.schedulers.Schedulers
+import java.lang.StringBuilder
 import java.util.ArrayList
 import java.util.function.Consumer
 
-interface Api {
-    @GET("rss")
-    fun getResponse() : Single<RssObject>
-}
-
 interface NApi {
     @GET("rss")
-    fun getRssObject() : Observable<RssObject>
-
-    @GET("rss/channel/item")
-    fun getPublications() : Observable<List<Publication>>
+    fun getRssObject() : Single<RssObject>
 }
 
 class MainActivity : AppCompatActivity() {
-
-    lateinit var rssObject: RssObject
-
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        rssObject = RssObject()
 
         val retrofit = Retrofit.Builder()
                 .baseUrl("https://nplus1.ru/")
@@ -54,89 +48,61 @@ class MainActivity : AppCompatActivity() {
 
         val nApi = retrofit.create(NApi::class.java)
 
-        AndroidSchedulers.mainThread()
-        val observable = nApi.getRssObject()
+        val rssObject = nApi.getRssObject()
                 .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
+                .toBlocking().value()
 
-        val rss = observable.doOnNext { rss -> findViewById<TextView>(R.id.inform).text = rss.channel.title }
+        findViewById<TextView>(R.id.inform).text = """
+                ${rssObject.channel!!.title}
+            ${rssObject.channel!!.link}
+            ${rssObject.channel!!.language}
+            ${rssObject.channel!!.image!!}
+            ${rssObject.channel!!.publications!![2].description}
+            ${rssObject.channel!!.image!!.link}
+        """.trimIndent()
 
+        Picasso.get()
+                .load(rssObject.channel!!.image!!.url)
+                .into(findViewById<ImageView>(R.id.superPuperImage))
+
+        val image = Picasso.get()
+            .load(rssObject.channel!!.image!!.url)
+            .get()
+
+        findViewById<ImageView>(R.id.superPuperImage).setImageBitmap(image)
 
     }
 }
 
+
 @Root(name = "rss", strict = false)
-class RssObject {
-
-    @get:Element(name = "channel")
-    @set:Element(name = "channel")
-    var channel: Channel = Channel()
-
-}
+data class RssObject constructor(
+    @field:Element var channel: Channel? = null
+)
 
 @Root(name = "channel", strict = false)
-class Channel {
-
-    @get:Element
-    @set:Element
-    lateinit var title: String
-
-    @get:Element(name = "link")
-    @set:Element(name = "link")
-    var link: String = ""
-
-    @get:Element(name = "language")
-    @set:Element(name = "language")
-    var language: String = ""
-
-    @get:Element(name = "image")
-    @set:Element(name = "image")
-    var image: ImageInfo = ImageInfo()
-
-    @get:ElementList(name = "item", inline = true)
-    @set:ElementList(name = "item", inline = true)
-    var publications: List<Publication> = ArrayList()
-
-}
+data class Channel constructor(
+    @field:Element var title: String = "",
+    @field:Element var link: String = "",
+    @field:Element var language: String = "",
+    @field:Element var image: ImageInfo? = null,
+    @field:ElementList(name = "item", inline = true) var publications: List<Publication>? = null
+)
 
 @Root(name = "image", strict = false)
-class ImageInfo {
-
-    @get:Element(name = "url")
-    @set:Element(name = "url")
-    var url: String = ""
-
-    @get:Element(name = "title")
-    @set:Element(name = "title")
-    var title: String = ""
-
-    @get:Element(name = "link")
-    @set:Element(name = "link")
-    var link: String = ""
-
-}
+data class ImageInfo constructor(
+    @field:Element var url: String = "",
+    @field:Element var title: String = "",
+    @field:Element var link: String = ""
+)
 
 @Root(name = "item", strict = false)
-class Publication {
-    @get:Element(name = "title")
-    @set:Element(name = "title")
-    var title: String = ""
+data class Publication constructor(
+    @field:Element var title: String = "",
+    @field:Element var description: String = "",
+    @field:Element var guid: String = "",
+    @field:Element var link: String = "",
+    @field:Element var pubDate: String = ""
+)
 
-    @get:Element(name = "description")
-    @set:Element(name = "description")
-    var description: String = ""
-
-    @get:Element(name = "guid")
-    @set:Element(name = "guid")
-    var guid: String = ""
-
-    @get:Element(name = "link")
-    @set:Element(name = "link")
-    var link: String = ""
-
-    @get:Element(name = "pubDate")
-    @set:Element(name = "pubDate")
-    var pubDate: String = ""
-
-}
 
