@@ -6,21 +6,9 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <TextView
-        android:id="@+id/inform"
-        android:layout_width="418dp"
-        android:layout_height="538dp"
-        android:text="Hello World!"
-        tools:ignore="MissingConstraints" />
-
-    <ImageView
-        android:id="@+id/superPuperImage"
-        android:layout_width="400dp"
-        android:layout_height="400dp"
-        tools:layout_editor_absoluteX="16dp"
-        tools:layout_editor_absoluteY="315dp"
-        tools:ignore="MissingConstraints">
-
-    </ImageView>
+    <ListView
+        android:id="@+id/rss_feed"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
