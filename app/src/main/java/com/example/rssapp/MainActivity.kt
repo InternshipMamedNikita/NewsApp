@@ -31,8 +31,8 @@ import java.util.function.Consumer
 import kotlin.concurrent.thread
 
 interface NApi {
-    @GET("rss")
-    fun getRssObject() : Single<RssObject>
+    @GET("{rss_path}")
+    fun getRssObject(@Path("rss_path") rssPath: String) : Single<RssObject>
 }
 
 class MainActivity : AppCompatActivity() {
@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity() {
 
         val nApi = retrofit.create(NApi::class.java)
 
-        val rssObject = nApi.getRssObject()
+        val rssObject = nApi.getRssObject("rss")
             .subscribeOn(Schedulers.io())
             .toBlocking().value()
 
@@ -79,32 +79,44 @@ data class Channel (
         @field:Element var title: String = "",
         @field:Element var link: String = "",
         @field:Element var language: String = "",
-        @field:Element var image: Image = Image(),
+        @field:Element(required = false) var image: Image = Image(),
         @field:ElementList(name = "item", inline = true) var publications: List<Publication> = ArrayList()
 ) {
     data class Image (
-        @field:Element var url: String = "",
-        @field:Element var title: String = "",
-        @field:Element var link: String = ""
-    )
+        @field:Element(name = "url", required = false) var urlToImage: String = "",
+        @field:Element(required = false) var title: String = "",
+        @field:Element(required = false) var link: String = ""
+    ) {
+        var bitmapToImage: Bitmap? = null
+            get() = Single.fromCallable { Picasso.get().load(urlToImage).get() }
+                    .subscribeOn(Schedulers.io())
+                    .toBlocking()
+                    .value()
+    }
 }
 
 @Root(name = "item", strict = false)
-class Publication (
+data class Publication (
     @field:Element var title: String = "",
     @field:Element var description: String = "",
-    @field:Element var guid: String = "",
     @field:Element var link: String = "",
     @field:Element var pubDate: String = "",
+    @field:Element(required = false) var guid: String = "",
     @field:Element(name = "creator", required = false) var author: String = "",
     @field:Element(name = "content", required = false) var image: Image = Image()
 ) {
     data class Image (
-       @field:Attribute(name = "url", required = false)
-       var urlToImage: String = "",
-       @field:Attribute(name = "type", required = false)
-       var type: String = ""
-    )
+        @field:Attribute(name = "url", required = false)
+        var urlToImage: String = "",
+        @field:Attribute(name = "type", required = false)
+        var type: String = ""
+    ) {
+        var bitmapToImage: Bitmap? = null
+            get() = Single.fromCallable { Picasso.get().load(urlToImage).get() }
+                    .subscribeOn(Schedulers.io())
+                    .toBlocking()
+                    .value()
+    }
 }
 
 
