@@ -1,6 +1,7 @@
 package com.example.rssapp
 
 import android.annotation.SuppressLint
+import android.graphics.Bitmap
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.ImageView
@@ -51,25 +52,6 @@ class MainActivity : AppCompatActivity() {
         val rssObject = nApi.getRssObject()
             .subscribeOn(Schedulers.io())
             .toBlocking().value()
-
-        findViewById<TextView>(R.id.inform).text = rssObject.channel!!.publications!![0].imageInfo!!.url
-
-//        Picasso.get()
-//                .load(rssObject.channel!!.publications!![0].imageInfo!!.url)
-//                .into(findViewById<ImageView>(R.id.superPuperImage))
-
-//        Picasso.get()
-//                .load(rssObject.channel!!.image!!.url)
-//                .into(findViewById<ImageView>(R.id.superPuperImage))
-
-
-//        val image = Picasso.get()
-//            .load(rssObject.channel!!.image!!.url)
-//            .get()
-
-//
-//        findViewById<ImageView>(R.id.superPuperImage).setImageBitmap(image)
-
     }
 }
 
@@ -95,6 +77,7 @@ data class ChannelImage constructor(
     @field:Element var link: String = ""
 )
 
+
 @Root(name = "item", strict = false)
 class Publication constructor(
     @field:Element var title: String = "",
@@ -102,20 +85,8 @@ class Publication constructor(
     @field:Element var guid: String = "",
     @field:Element var link: String = "",
     @field:Element var pubDate: String = "",
-    @field:Element(name = "content") var imageInfo: PublicationImage? = null,
     @field:Element(name = "creator", required = false) var author: String = ""
-) {
-    @Root(name = "content", strict = false)
-    object PublicationImage {
-        @field:Attribute(name = "url") val url: String = ""
-        @field:Attribute(name = "type", required = false) val type: String = ""
-    }
-}
+)
 
-//@Root(name = "media:content", strict = false)
-//data class PublicationImage constructor (
-//    @field:Attribute val url: String = "",
-//    @field:Attribute val type: String = ""
-//)
 
 
