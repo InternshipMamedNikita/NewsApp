@@ -31,12 +31,7 @@ data class Publication (
                     .toBlocking()
                     .value()
         fun setBitmapToImageView(imageView: ImageView) {
-            Single.fromCallable { Picasso.get()
-                                        .load(urlToImage)
-                                        .fit().into(imageView) }
-                    .subscribeOn(Schedulers.newThread())
-                    .toBlocking()
-                    .value()
+            Picasso.get().load(urlToImage).fit().into(imageView)
         }
     }
 }
