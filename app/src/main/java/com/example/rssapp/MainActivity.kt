@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.ContactsContract
 import android.widget.ImageView
 import android.widget.TextView
 import com.squareup.picasso.Picasso
@@ -52,41 +53,59 @@ class MainActivity : AppCompatActivity() {
         val rssObject = nApi.getRssObject()
             .subscribeOn(Schedulers.io())
             .toBlocking().value()
+
+        findViewById<TextView>(R.id.inform).text = """
+        Об источнике:
+            ${rssObject.channel.title}
+            ${rssObject.channel.language}
+            ${rssObject.channel.link}
+            ${rssObject.channel.image}
+        О первой статье:
+            ${rssObject.channel.publications[0].title}
+            ${rssObject.channel.publications[0].description}
+            ${rssObject.channel.publications[0].author}
+            ${rssObject.channel.publications[0].image.urlToImage}
+        """.trimIndent()
     }
 }
 
-
 @Root(name = "rss", strict = false)
-data class RssObject constructor(
-    @field:Element var channel: Channel? = null
+data class RssObject (
+    @field:Element var channel: Channel = Channel()
 )
 
 @Root(name = "channel", strict = false)
-data class Channel constructor(
-    @field:Element var title: String = "",
-    @field:Element var link: String = "",
-    @field:Element var language: String = "",
-    @field:Element var image: ChannelImage? = null,
-    @field:ElementList(name = "item", inline = true) var publications: List<Publication>? = null
-)
-
-@Root(name = "image", strict = false)
-data class ChannelImage constructor(
-    @field:Element var url: String = "",
-    @field:Element var title: String = "",
-    @field:Element var link: String = ""
-)
-
+data class Channel (
+        @field:Element var title: String = "",
+        @field:Element var link: String = "",
+        @field:Element var language: String = "",
+        @field:Element var image: Image = Image(),
+        @field:ElementList(name = "item", inline = true) var publications: List<Publication> = ArrayList()
+) {
+    data class Image (
+        @field:Element var url: String = "",
+        @field:Element var title: String = "",
+        @field:Element var link: String = ""
+    )
+}
 
 @Root(name = "item", strict = false)
-class Publication constructor(
+class Publication (
     @field:Element var title: String = "",
     @field:Element var description: String = "",
     @field:Element var guid: String = "",
     @field:Element var link: String = "",
     @field:Element var pubDate: String = "",
-    @field:Element(name = "creator", required = false) var author: String = ""
-)
+    @field:Element(name = "creator", required = false) var author: String = "",
+    @field:Element(name = "content", required = false) var image: Image = Image()
+) {
+    data class Image (
+       @field:Attribute(name = "url", required = false)
+       var urlToImage: String = "",
+       @field:Attribute(name = "type", required = false)
+       var type: String = ""
+    )
+}
 
 
 
